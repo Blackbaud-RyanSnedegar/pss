@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+def get_pss(pid):
+    """Retrieve the Pss size for a given PID."""
+    try:
+        with open(f"/proc/{pid}/smaps_rollup", "r") as f:
+            for line in f:
+                if line.startswith("Pss:"):
+                    return int(line.split()[1])  # Return the Pss value in kB
+    except FileNotFoundError:
+        return None  # Process may no longer exist
+    except Exception as e:
+        sys.stderr.write(f"Error reading Pss for PID {pid}: {e}\n")
+        return None
+
+def find_pids_by_name(name):
+    """Find PIDs matching a given process name."""
+    pids = []
+    for pid in os.listdir("/proc"):
+        if pid.isdigit():
+            try:
+                with open(f"/proc/{pid}/comm", "r") as f:
+                    if name in f.read().strip():
+                        pids.append(int(pid))
+            except FileNotFoundError:
+                continue  # Process may no longer exist
+            except Exception as e:
+                sys.stderr.write(f"Error reading process name for PID {pid}: {e}\n")
+    return pids
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: script.py <comma-separated PIDs or process name>")
+        sys.exit(1)
+
+    input_arg = sys.argv[1]
+    if input_arg.isdigit() or " " in input_arg:
+        # Input is a list of PIDs
+        pids = [int(pid) for pid in input_arg.split(" ") if pid.isdigit()]
+    else:
+        # Input is a process name
+        pids = find_pids_by_name(input_arg)
+
+    if not pids:
+        print("No matching PIDs found.")
+        sys.exit(1)
+
+    print("PID\tPss")
+    for pid in pids:
+        pss = get_pss(pid)
+        if pss is not None:
+            print(f"{pid}\t{pss}kb")
+
+if __name__ == "__main__":
+    main()
