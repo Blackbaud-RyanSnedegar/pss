@@ -15,8 +15,6 @@ def get_memory_sizes(pid):
                     sizes["Pss"] = int(line.split()[1])  # Pss in kB
                 elif line.startswith("Rss:"):
                     sizes["Rss"] = int(line.split()[1])  # Rss in kB
-                elif line.startswith("VmSize:"):
-                    sizes["Vss"] = int(line.split()[1])  # Vss in kB
     except FileNotFoundError:
         return None  # Process may no longer exist
     except Exception as e:
@@ -44,7 +42,6 @@ def find_pids_by_name(name):
 def main():
     parser = argparse.ArgumentParser(description="Retrieve memory sizes (Pss, Vss, Rss) for processes.")
     parser.add_argument("input", help="Comma-separated PIDs or process name")
-    parser.add_argument("-v", "--vss", action="store_true", help="Include Vss (Virtual Set Size) in output")
     parser.add_argument("-r", "--rss", action="store_true", help="Include Rss (Resident Set Size) in output")
     args = parser.parse_args()
 
@@ -61,8 +58,6 @@ def main():
         sys.exit(1)
 
     headers = ["PID", "Pss"]
-    if args.vss:
-        headers.append("Vss")
     if args.rss:
         headers.append("Rss")
     print("\t".join(headers))
@@ -71,8 +66,6 @@ def main():
         sizes = get_memory_sizes(pid)
         if sizes:
             row = [str(pid), f"{sizes['Pss']}kb"]
-            if args.vss:
-                row.append(f"{sizes['Vss']}kb" if sizes["Vss"] is not None else "N/A")
             if args.rss:
                 row.append(f"{sizes['Rss']}kb" if sizes["Rss"] is not None else "N/A")
             print("\t".join(row))
