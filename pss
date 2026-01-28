@@ -6,8 +6,8 @@ import argparse
 
 
 def get_memory_sizes(pid):
-    """Retrieve the Pss, Vss, and Rss sizes for a given PID."""
-    sizes = {"Pss": None, "Vss": None, "Rss": None}
+    """Retrieve the Pss and Rss sizes for a given PID."""
+    sizes = {"Pss": None, "Rss": None}
     try:
         with open(f"/proc/{pid}/smaps_rollup", "r") as f:
             for line in f:
